@@ -345,7 +345,7 @@
 (define starting-note-field (new text-field%
                                  [parent scale-type-panel]
                                  [label "Note"]
-                                 [min-width 50]
+                                 [min-width 100]
                                  [stretchable-width #f]
                                  [init-value "C"]))
 
@@ -378,6 +378,7 @@
 (define tuning-box (new text-field%
                         [parent tuning-panel]
                         [label "Tuning"]
+                        [min-width 75]
                         [init-value "E A D G B E"]))
 
 (define tuning-radio (new radio-box%
@@ -404,12 +405,12 @@
                          (if (= 1 radio-choice)
                              (set! chosen-tuning split)
                              (set! chosen-tuning (reverse split)))
-                         (if (is-valid-note? note-txt)
-                             (begin
-                               (set! chosen-note note-txt)
-                               (set! chosen-scale-type
-                                     (hash-ref scales-and-labels scale-type))
-                               (send msg set-label "Done!"))
-                             (send msg set-label
-                                   "Wrongpants!"))
-                         (send fretboard-canvas refresh)))]))
+                         (cond
+                          ((>= 1 chosen-strings)
+                           (send msg set-label "Not enough strings"))
+                          ((is-valid-note? note-txt)
+                           (begin (set! chosen-note note-txt)
+                                  (set! chosen-scale-type
+                                        (hash-ref scales-and-labels scale-type))
+                                  (send fretboard-canvas refresh)))
+                          (else (send msg set-label "Not a valid note")))))]))
