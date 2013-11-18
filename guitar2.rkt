@@ -40,6 +40,7 @@
            (hash-set! out (mscale-label ((car types) "C")) (car types))
            (loop out (cdr types))))))
 
+(define scales-and-labels (make-scales-and-labels))
 #;
 (define scales-and-labels (hash "Major" major-mscale
                                 "Dorian" dorian-mscale
@@ -109,7 +110,7 @@
 ;; Guitar-Posn String -> String
 ;; Return given note on string at fret, notated with the proper accidental.
 (define (get-note-at gposn [sharp "#"])
-  (int-to-note (get-int-at gposn) sharp))
+  (int-to-note (get-int-at gposn (map note-to-int chosen-tuning)) sharp))
 
 ;; String Scale -> Boolean
 ;; Determines whether given note is in given scale.
@@ -261,8 +262,20 @@
                       color)
            img))
 
-(define DEFFRETBOARD (make-fretboard WIDTH HEIGHT STRINGS FRETS TUNING '()))
+(define DEFFRETBOARD
+  (make-fretboard
+   WIDTH HEIGHT
+   STRINGS FRETS
+   TUNING
+   '()))
 
+(define VIOLIN
+  (make-fretboard
+   WIDTH
+   HEIGHT
+   4 12
+   (list "G" "D" "A" "E")
+   '()))
 ;;
 ;; GUI Definitions
 ;;
@@ -271,9 +284,21 @@
 (define chosen-note "C")
 (define chosen-scale-type major-mscale)
 (define (chosen-scale) (chosen-scale-type chosen-note))
-(define chosen-fretboard DEFFRETBOARD)
+;(define chosen-fretboard DEFFRETBOARD)
 (define chosen-direction mscale-ascending)
 (define string-choices (take (mscale-ascending (major-mscale "C")) 7))
+
+(define chosen-strings STRINGS)
+(define chosen-frets FRETS)
+(define chosen-tuning TUNING)
+
+(define (chosen-fretboard)
+  (make-fretboard
+   WIDTH HEIGHT
+   chosen-strings
+   chosen-frets
+   chosen-tuning
+   '()))
 
 ;; Basic window frame. Contains main panel
 (define gui (new frame%
@@ -291,7 +316,7 @@
   (define my-new-scene (draw-fretboard
                         (scale-dots
                          (chosen-scale)
-                         chosen-fretboard
+                         (chosen-fretboard)
                          chosen-direction)))
   (render-image my-new-scene my-drawing-context 0 0))
 
@@ -315,7 +340,7 @@
 
 (define tuning-panel (new group-box-panel%
                           [parent scale-and-tuning-panel]
-                          [label "Tuning"]))
+                          [label "Tuning Controls"]))
 
 (define starting-note-field (new text-field%
                                  [parent scale-type-panel]
@@ -342,7 +367,6 @@
                                [choices (map (lambda (x)
                                                (mscale-label (x "C")))
                                              scale-types)]
-#;
                                [callback (lambda (c e)
                                            (begin (set! chosen-scale-type
                                                         (hash-ref scales-and-labels
@@ -351,51 +375,16 @@
                                                       (send scale-dir-choice enable #f)
                                                       (send scale-dir-choice enable #t))))]))
 
-;; This has no purpose yet. Add callback for changing visibility of tuning fields
-(define string-number-field (new choice%
-                                 [parent tuning-panel]
-                                 [label "Number of strings"]
-                                 [choices (list "1" "2" "3" "4" "5" "6" "7" "8")]
-                                 [selection 5]))
+(define tuning-box (new text-field%
+                        [parent tuning-panel]
+                        [label "Tuning"]
+                        [init-value "E A D G B E"]))
 
-(define strings-panel (new vertical-panel%
-                           [parent tuning-panel]))
-
-(define note-six (new choice%
-                      [label "Sixth String"]
-                      [parent strings-panel]
-                      [choices string-choices]
-                      [selection (get-position string-choices (list-ref TUNING 5))]))
-
-(define note-five (new choice%
-                       [label "Fifth String"]
-                       [parent strings-panel]
-                       [choices string-choices]
-                       [selection (get-position string-choices (list-ref TUNING 4))]))
-
-(define note-four (new choice%
-                       [label "Fourth String"]
-                       [parent strings-panel]
-                       [choices string-choices]
-                       [selection (get-position string-choices (list-ref TUNING 3))]))
-
-(define note-three (new choice%
-                        [label "Third String"]
-                        [parent strings-panel]
-                        [choices string-choices]
-                        [selection (get-position string-choices (list-ref TUNING 2))]))
-
-(define note-two (new choice%
-                      [label "Second String"]
-                      [parent strings-panel]
-                      [choices string-choices]
-                      [selection (get-position string-choices (list-ref TUNING 1))]))
-
-(define note-one (new choice%
-                      [label "First String"]
-                      [parent strings-panel]
-                      [choices string-choices]
-                      [selection (get-position string-choices (list-ref TUNING 0))]))
+(define tuning-radio (new radio-box%
+                          [parent tuning-panel]
+                          [label ""]
+                          [choices (list "Low to high"
+                                         "High to low")]))
 
 (define msg (new message%
                  [parent controls-panel]
@@ -405,11 +394,16 @@
 (define button (new button%
                     [parent controls-panel]
                     [label "Show"]
-                    #;
                     [callback
                      (lambda (_ event)
                        (let ([note-txt (send starting-note-field get-value)]
-                             [scale-type (send scale-type-choice get-string-selection)])
+                             [scale-type (send scale-type-choice get-string-selection)]
+                             [radio-choice (send tuning-radio get-selection)]
+                             [split (string-split (send tuning-box get-value))])
+                         (set! chosen-strings (length split))
+                         (if (= 1 radio-choice)
+                             (set! chosen-tuning split)
+                             (set! chosen-tuning (reverse split)))
                          (if (is-valid-note? note-txt)
                              (begin
                                (set! chosen-note note-txt)
