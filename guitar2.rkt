@@ -119,14 +119,18 @@
           (member note (mscale-descending scale))) #t #f))
 
 ;; Scale Fretboard -> Fretboard
-(define (scale-dots scale fb [dir mscale-ascending])
+;; note-or-number: 0 for note, 1 for scale degree, 2 for both
+(define (scale-dots scale fb note-or-number [dir mscale-ascending])
   (define int-list (map note-to-int (dir scale)))
   (define (recur-frets f mf string)
     (let ([note (note-to-int (get-note-at (guitar-posn string f)))])
       (cond ((> f mf) '())
             ((member note int-list)
-             (let ([pos (get-position int-list note)])
-               (cons (make-dot (list-ref (dir scale) pos)
+             (let* ([pos (get-position int-list note)]
+                    [rt (cond ((zero? note-or-number) (list-ref (dir scale) pos))
+                              ((= 1 note-or-number) (number->string (add1 pos)))
+                              (else (string-join (list (list-ref (dir scale) pos) (number->string (add1 pos))) "/")))])
+               (cons (make-dot rt
                                (list-ref default-colors pos)
                                (make-guitar-posn string f))
                      (recur-frets (add1 f) mf string))))
@@ -284,9 +288,10 @@
 (define chosen-note "C")
 (define chosen-scale-type major-mscale)
 (define (chosen-scale) (chosen-scale-type chosen-note))
-;(define chosen-fretboard DEFFRETBOARD)
 (define chosen-direction mscale-ascending)
-(define string-choices (take (mscale-ascending (major-mscale "C")) 7))
+
+;; chosen-return-type: Used for (scale-dots), 0 for note name, 1 for scale degree
+(define chosen-return-type 0)
 
 (define chosen-strings STRINGS)
 (define chosen-frets FRETS)
@@ -317,6 +322,7 @@
                         (scale-dots
                          (chosen-scale)
                          (chosen-fretboard)
+                         chosen-return-type
                          chosen-direction)))
   (render-image my-new-scene my-drawing-context 0 0))
 
@@ -375,6 +381,15 @@
                                                       (send scale-dir-choice enable #f)
                                                       (send scale-dir-choice enable #t))))]))
 
+(define scale-return-type (new radio-box%
+                               (parent scale-type-panel)
+                               (label "Dot Text:")
+                               (choices (list "Note Name"
+                                              "Scale Degree"
+                                              "Note/Degree"))
+                               (callback (lambda (_ e)
+                                           (set! chosen-return-type (send scale-return-type get-selection))))))
+
 (define tuning-box (new text-field%
                         [parent tuning-panel]
                         [label "Tuning"]
@@ -406,11 +421,11 @@
                              (set! chosen-tuning split)
                              (set! chosen-tuning (reverse split)))
                          (cond
-                          ((>= 1 chosen-strings)
-                           (send msg set-label "Not enough strings"))
-                          ((is-valid-note? note-txt)
-                           (begin (set! chosen-note note-txt)
-                                  (set! chosen-scale-type
-                                        (hash-ref scales-and-labels scale-type))
-                                  (send fretboard-canvas refresh)))
-                          (else (send msg set-label "Not a valid note")))))]))
+                           ((>= 1 chosen-strings)
+                            (send msg set-label "Not enough strings"))
+                           ((is-valid-note? note-txt)
+                            (begin (set! chosen-note note-txt)
+                                   (set! chosen-scale-type
+                                         (hash-ref scales-and-labels scale-type))
+                                   (send fretboard-canvas refresh)))
+                           (else (send msg set-label "Not a valid note")))))]))
