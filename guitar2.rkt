@@ -93,12 +93,6 @@
                   (fretboard-tuning fb)
                   (fretboard-dots fb)))
 
-;; Scale -> Boolean
-;; Determines if scale contains same notes ascending and descending
-(define (mscale-same-up-down? sc)
-  (equal? (mscale-ascending sc)
-          (reverse (mscale-descending sc))))
-
 ;; Guitar-Posn [Listof Int] -> String
 ;; Return int on string at fret with tuning
 ;; int is essentially the scale degree of a chromatic scale starting on "C",
@@ -121,15 +115,18 @@
 ;; Scale Fretboard -> Fretboard
 ;; note-or-number: 0 for note, 1 for scale degree, 2 for both
 (define (scale-dots scale fb note-or-number [dir mscale-ascending])
-  (define int-list (map note-to-int (dir scale)))
+  (define dir-scale (if (equal? dir mscale-descending)
+                        (reverse (dir scale))
+                        (dir scale)))
+  (define int-list (map note-to-int dir-scale))
   (define (recur-frets f mf string)
     (let ([note (note-to-int (get-note-at (guitar-posn string f)))])
       (cond ((> f mf) '())
             ((member note int-list)
              (let* ([pos (get-position int-list note)]
-                    [rt (cond ((zero? note-or-number) (list-ref (dir scale) pos))
+                    [rt (cond ((zero? note-or-number) (list-ref dir-scale pos))
                               ((= 1 note-or-number) (number->string (add1 pos)))
-                              (else (string-join (list (list-ref (dir scale) pos) (number->string (add1 pos))) "/")))])
+                              (else (string-join (list (list-ref dir-scale pos) (number->string (add1 pos))) "/")))])
                (cons (make-dot rt
                                (list-ref default-colors pos)
                                (make-guitar-posn string f))
@@ -329,13 +326,15 @@
 ;; Main canvas for drawing fretboards
 (define fretboard-canvas (new canvas%
                               [parent main-panel]
-                              [min-width WIDTH]
-                              [min-height HEIGHT]
+                              [min-width (+ 40 WIDTH)]
+                              [min-height (+ 40 HEIGHT)]
                               [paint-callback paint!]))
 
 (define controls-panel (new vertical-panel%
                             [parent main-panel]
-                            [min-width 0]))
+                            [min-width 0]
+                            [min-height 240]
+                            [stretchable-height #f]))
 
 (define scale-and-tuning-panel (new horizontal-panel%
                                     [parent controls-panel]))
@@ -362,8 +361,9 @@
                                              "Descending")]
                               [enabled #f]
                               [callback (lambda (c e)
-                                          (if (equal? (send scale-dir-choice get-string-selection)
-                                                      "Descending")
+                                          (if (and (equal? (send scale-dir-choice get-string-selection)
+                                                           "Descending")
+                                                   (not (mscale-same-up-down? (chosen-scale))))
                                               (set! chosen-direction mscale-descending)
                                               (set! chosen-direction mscale-ascending)))]))
 
@@ -420,6 +420,8 @@
                          (if (= 1 radio-choice)
                              (set! chosen-tuning split)
                              (set! chosen-tuning (reverse split)))
+                         (when (mscale-same-up-down? (chosen-scale))
+                           (set! chosen-direction mscale-ascending))
                          (cond
                            ((>= 1 chosen-strings)
                             (send msg set-label "Not enough strings"))
