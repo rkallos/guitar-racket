@@ -18,6 +18,12 @@
   (list (mscale-ascending mscale)
         (mscale-descending mscale)))
 
+;; mscale -> Boolean
+;; Returns whether or not scale is the same ascending or descending
+(define (mscale-same-up-down? mscale)
+  (equal? (mscale-ascending mscale)
+          (mscale-descending mscale)))
+
 ;; String -> mscale
 ;; Create mscale struct of major mscale of root
 (define (major-mscale root)
