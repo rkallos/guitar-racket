@@ -104,13 +104,13 @@
   (reverse interval))
 
 (define (determine-interval note1 note2 [shorthand #f])
-  (define fifths-steps '(("unison" "1" 0)
-                       ("fifth" "5" 7)
-                       ("second" "2" 2)
-                       ("sixth" "6" 9)
-                       ("third" "3" 4)
-                       ("seventh" "7" 11)
-                       ("fourth" "4" 5)))
+  (define fifths-steps (circular-list '("unison" "1" 0)
+                                      '("fifth" "5" 7)
+                                      '("second" "2" 2)
+                                      '("sixth" "6" 9)
+                                      '("third" "3" 4)
+                                      '("seventh" "7" 11)
+                                      '("fourth" "4" 5)))
   (define (get-fifths n1 n2)
     (let ([notes-in-fifths
            (map (lambda (x)
@@ -133,7 +133,7 @@
         (else (if (not shorthand) "diminished unison" "bb1")))))
   (let* ([int-dist (measure note1 note2)]
          [number-of-fifths (get-fifths note1 note2)]
-         [current (better-list-ref fifths-steps number-of-fifths)]
+         [current (list-ref fifths-steps number-of-fifths)]
          [maj (list-ref current 2)])
     (cond
       ((apply equal? (map strip-note (list note1 note2)))

@@ -65,9 +65,15 @@
   (if (is-valid-note? note)
       (let* ([flats (count (checker #\b) (cdr (string->list note)))]
              [sharps (count (checker #\#) (cdr (string->list note)))])
-        (if (positive? (- (+ (hash-ref note-hash (strip-note note)) sharps) flats))
-            (- (+ (hash-ref note-hash (strip-note note)) sharps) flats)
-            (- 12 (+ (hash-ref note-hash (strip-note note)) sharps) flats)))
+        (if (positive? (- (+ (hash-ref note-hash (strip-note note))
+                             sharps)
+                          flats))
+            (- (+ (hash-ref note-hash (strip-note note))
+                  sharps)
+               flats)
+            (- 12
+               (+ (hash-ref note-hash (strip-note note)) sharps)
+               flats)))
       (error "note-to-int: Input not a valid note.")))
 
 ;; Note -> Note
@@ -97,14 +103,14 @@
         (loop (add1 val) (diminish out)))))))
 
 ;; Note -> Note
-;; Returns augmented note
+;; Returns augmented note by removing a "b" or adding a "#"
 (define (augment note)
   (if (not (equal? (last (string->list note)) #\b))
       (string-append note "#")
       (list->string (drop-right (string->list note) 1))))
 
 ;; Note -> Note
-;; Returns diminished note
+;; Returns diminished note by removing a "#" or adding a "b"
 (define (diminish note)
   (if (not (equal? (last (string->list note)) #\#))
       (string-append note "b")

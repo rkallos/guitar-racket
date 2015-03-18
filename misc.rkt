@@ -10,6 +10,7 @@
 ;;; better-take: Doubles list to take more values than list provides
 ;;; better-list-ref: Allows for indexes greater than (length lst), and negative indexes
 ;;; swap-at: Swap old with new in lst
+;;; circular-list: Implementation of circular list using Racket's make-reader-graph
 
 (define (get-position lst x)
   (cond
@@ -66,5 +67,16 @@
                    (length news)))
       (error "Lists are not the same length")
       (recur lst olds news)))
+
+(define (circular-list val1 . vals)
+  (let ([ph (make-placeholder #f)])
+    (placeholder-set!
+     ph
+     (cons val1 (let loop ([vals vals])
+                  (if (null? vals)
+                      ph
+                      (cons (car vals)
+                            (loop (cdr vals)))))))
+    (make-reader-graph ph)))
 
 (provide (all-defined-out))

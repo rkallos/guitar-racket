@@ -47,7 +47,7 @@
                                 "Phrygian" phrygian-mscale
                                 "Lydian" lydian-mscale
                                 "Mixolydian" mixolydian-mscale
-                                "Minor/Aolean" minor-mscale
+                                "Aolean/Natural Minor" minor-mscale
                                 "Locrian" locrian-mscale
                                 "Harmonic Minor" harmonic-minor
                                 "Melodic Minor" melodic-minor
