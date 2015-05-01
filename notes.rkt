@@ -43,21 +43,9 @@
   (equal? (note-to-int note1) (note-to-int note2)))
 
 ;; String -> Boolean
-;; Checks if String is a valid Note.
+;; Checks if String is a valid note.
 (define (is-valid-note? note)
-  (define (loop x)
-    (cond
-     ((empty? x) #t)
-     (else
-      (cond
-       ((not (or (equal? (car x) #\#)
-                 (equal? (car x) #\b))) #f)
-       (else
-        (loop (cdr x)))))))
-  (cond
-   ((not (hash-has-key? note-hash (strip-note note))) #f)
-   (else
-    (loop (cdr (string->list note))))))
+  (regexp-match? #rx"[A-G][#b]*" note))
 
 ;; Note -> Integer
 ;; Turns Note into a number representing semitones above C
