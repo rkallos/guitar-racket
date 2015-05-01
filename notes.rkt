@@ -29,12 +29,16 @@
 ;; Produces note from note-int, which represents semitones away from C.
 (define (int-to-note note-int #:accidentals [accidentals "#"])
   (cond
-    ((<= 12 note-int) (int-to-note (remainder note-int 12) accidentals))
-    ((> 0 note-int) (int-to-note (+ 12 note-int) accidentals))
-    ((equal? accidentals "#") (list-ref sharpnotes note-int))
-    ((equal? accidentals "b") (list-ref flatnotes note-int))
-    (else
-     (error (format "int-to-note: %s is not a valid accidental." accidentals)))))
+   [(<= 12 note-int)
+    (int-to-note (remainder note-int 12) accidentals)]
+   [(> 0 note-int)
+    (int-to-note (+ 12 note-int) accidentals)]
+   [(equal? accidentals "#")
+    (list-ref sharpnotes note-int)]
+   [(equal? accidentals "b")
+    (list-ref flatnotes note-int)]
+   [else
+    (error (format "int-to-note: %s is not a valid accidental." accidentals))]))
 
 ;; Note + Note -> Boolean
 ;; Checks if two notes are enharmonic equivalents.
@@ -84,10 +88,10 @@
     (let loop ([val (- sharps flats)]
                [out letter])
       (cond
-       ((zero? val) out)
-       ((positive? val) (loop (sub1 val) (augment out)))
-       (else
-        (loop (add1 val) (diminish out)))))))
+       [(zero? val) out]
+       [(positive? val) (loop (sub1 val) (augment out))]
+       [else
+        (loop (add1 val) (diminish out))]))))
 
 ;; Note -> Note
 ;; Returns augmented note by removing a "b" or adding a "#"
