@@ -10,7 +10,6 @@
                         ("G" . 7)
                         ("A" . 9)
                         ("B" . 11)))
-(define fifths (list "F" "C" "G" "D" "A" "E" "B"))
 
 (define sharpnotes (list "C" "C#" "D" "D#" "E" "F" "F#" "G" "G#" "A" "A#" "B"))
 (define flatnotes (list "C" "Db" "D" "Eb" "E" "F" "Gb" "G" "Ab" "A" "Bb" "B"))
@@ -18,17 +17,17 @@
 ;; Note -> Note
 ;; Returns note without accidentals
 (define (strip-note note)
-  (string (car (string->list note))))
+  (string (string-ref note 0)))
 
 ;; Character -> Character -> Boolean
 ;; Checks if sym is equal to x
-(define (checker sym)
+(define (is? sym)
   (lambda (x)
     (equal? x sym)))
 
 ;; Number -> Note
 ;; Produces note from note-int, which represents semitones away from C.
-(define (int-to-note note-int [accidentals "#"])
+(define (int-to-note note-int #:accidentals [accidentals "#"])
   (cond
     ((<= 12 note-int) (int-to-note (remainder note-int 12) accidentals))
     ((> 0 note-int) (int-to-note (+ 12 note-int) accidentals))
@@ -44,15 +43,15 @@
 
 ;; String -> Boolean
 ;; Checks if String is a valid note.
-(define (is-valid-note? note)
+(define (note? note)
   (regexp-match? #rx"[A-G][#b]*" note))
 
 ;; Note -> Integer
 ;; Turns Note into a number representing semitones above C
 (define (note-to-int note)
-  (if (is-valid-note? note)
-      (let* ([flats (count (checker #\b) (cdr (string->list note)))]
-             [sharps (count (checker #\#) (cdr (string->list note)))])
+  (if (note? note)
+      (let ([flats (count (is? #\b) (cdr (string->list note)))]
+            [sharps (count (is? #\#) (cdr (string->list note)))])
         (if (positive? (- (+ (hash-ref note-hash (strip-note note))
                              sharps)
                           flats))
@@ -68,20 +67,20 @@
 ;; Returns enharmonic equivalent without accidentals
 (define (reduce-accidentals note)
   (let* ([letter (strip-note note)]
-         [flats (count (checker #\b) (cdr (string->list note)))]
-         [sharps (count (checker #\#) (cdr (string->list note)))]
+         [flats (count (is? #\b) (cdr (string->list note)))]
+         [sharps (count (is? #\#) (cdr (string->list note)))]
          [val (+ (note-to-int letter) (- sharps flats))])
     (if (>= val 12)
         (int-to-note (remainder val 12))
-        (int-to-note (remainder val 12) "b"))))
+        (int-to-note (remainder val 12) #:accidentals "b"))))
 
 ;; Note -> Note
 ;; Removes redundant accidentals from note.
 ;; This differs from reduce-accidentals in that it will not change the note letter.
 (define (reduce-redundant-accidentals note)
   (let* ([letter (strip-note note)]
-         [flats (count (checker #\b) (cdr (string->list note)))]
-         [sharps (count (checker #\#) (cdr (string->list note)))])
+         [flats (count (is? #\b) (cdr (string->list note)))]
+         [sharps (count (is? #\#) (cdr (string->list note)))])
     (let loop ([val (- sharps flats)]
                [out letter])
       (cond

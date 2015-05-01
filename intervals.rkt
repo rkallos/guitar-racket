@@ -12,7 +12,7 @@
       (else
        (loop n (cdr lst) (add1 inc)))))
   (cond
-    ((not (is-valid-note? start-note)) (error (format "interval: ~s is not a valid note." start-note)))
+    ((not (note? start-note)) (error (format "interval: ~s is not a valid note." start-note)))
     (else
      (list-ref (get-notes key) (remainder (+ interval (loop start-note (get-notes key) 0)) 7)))))
 
@@ -122,8 +122,8 @@
           (apply - (reverse notes-in-fifths)))))
   (define (corner-case-unisons)
     (let* ([checkfunc (lambda (x)
-                        (- (count (checker #\#) (cdr (string->list x)))
-                           (count (checker #\b) (cdr (string->list x)))))]
+                        (- (count (is? #\#) (cdr (string->list x)))
+                           (count (is? #\b) (cdr (string->list x)))))]
            [n1val (checkfunc note1)]
            [n2val (checkfunc note2)])
       (cond
@@ -177,7 +177,7 @@
                              (6 ,int-major-sixth ,int-minor-third)
                              (7 ,int-major-seventh ,int-minor-second)))
   (cond
-    ((not (is-valid-note? note)) #f)
+    ((not (note? note)) #f)
     (else
      ((apply compose1
        (map

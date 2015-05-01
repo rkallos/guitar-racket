@@ -425,7 +425,7 @@
                          (cond
                            ((>= 1 chosen-strings)
                             (send msg set-label "Not enough strings"))
-                           ((is-valid-note? note-txt)
+                           ((note? note-txt)
                             (begin (set! chosen-note note-txt)
                                    (set! chosen-scale-type
                                          (hash-ref scales-and-labels scale-type))

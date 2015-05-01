@@ -11,17 +11,17 @@
 (check-equal? (int-to-note 0) "C")
 (check-equal? (int-to-note 7) "G")
 (check-equal? (int-to-note 10) "A#")
-(check-equal? (int-to-note 10 "b") "Bb")
+(check-equal? (int-to-note 10 #:accidentals "b") "Bb")
 
 ;; is-enharmonic?
 (check-true (is-enharmonic? "C#" "Db"))
 (check-true (is-enharmonic? "Cbbb" "A"))
 (check-false (is-enharmonic? "Cbb" "B"))
 
-;; is-valid-note?
-(check-true (is-valid-note? "C"))
-(check-true (is-valid-note? "C###"))
-(check-false (is-valid-note? "H"))
+;; note?
+(check-true (note? "C"))
+(check-true (note? "C###"))
+(check-false (note? "H"))
 
 ;; reduce-accidentals
 (check-equal? (reduce-accidentals "C##") "D")

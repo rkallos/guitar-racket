@@ -306,7 +306,7 @@
   (let* ([typedchord (regexp-replace #rx"min|mi|-" (regexp-replace #rx"maj|ma" shorthand-string "M") "m")]
          [notename (list->string (for/list ([i typedchord]
                                       #:break (not (or
-                                                    (is-valid-note? (string i))
+                                                    (note? (string i))
                                                     (or
                                                      (equal? #\# i)
                                                      (equal? #\b i)))))
@@ -333,7 +333,7 @@
           ((if (values slash) #t #f)
            (cond
              ((string? slash)
-              (if (is-valid-note? slash)
+              (if (note? slash)
                   (append (list slash) res)
                   (error (format "chord-from-shorthand: Unknown slash note ~s" slash))))
              ((list? slash)
